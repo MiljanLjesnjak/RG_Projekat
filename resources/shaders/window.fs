@@ -29,20 +29,24 @@ uniform Light dirLight;
 
 void main()
 {
+    //FragColor = texture(material.diffuse, TexCoords);
+    //return;
+
+
     // ambient
-    vec3 ambient = dirLight.ambient * texture(material.diffuse, TexCoords).rgb;
+    vec4 ambient = vec4(dirLight.ambient, 1.0) * texture(material.diffuse, TexCoords).rgba;
 
     // diffuse
     vec3 norm = normalize(Normal);
     vec3 dirLightDir = normalize(dirLight.position - FragPos);
     float diff = max(dot(norm, dirLightDir), 0.0);
-    vec3 diffuse = dirLight.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+    vec4 diffuse = vec4(dirLight.diffuse, 1.0) * diff * texture(material.diffuse, TexCoords).rgba;
 
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-dirLightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = dirLight.specular * spec * texture(material.specular, TexCoords).rgb;
+    vec4 specular = vec4(dirLight.specular, 1.0) * spec * texture(material.specular, TexCoords).rgba;
 
     // attenuation
     float distance    = length(dirLight.position - FragPos);
@@ -52,7 +56,7 @@ void main()
     diffuse   *= attenuation;
     specular *= attenuation;
 
-    vec3 result = ambient + diffuse + specular;
+    vec4 result = ambient + specular;
 
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(result);
 }

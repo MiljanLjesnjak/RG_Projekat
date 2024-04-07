@@ -161,10 +161,14 @@ int main() {
     // configure global opengl state
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
+    //BLENDING
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // build and compile shaders
     // -------------------------
     Shader lightingShader("resources/shaders/floor.vs", "resources/shaders/floor.fs");
+    Shader windowShader("resources/shaders/window.vs", "resources/shaders/window.fs");
 
 
     // load models
@@ -197,10 +201,15 @@ int main() {
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
     unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
     unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
+    unsigned int diffuseMapGlass = loadTexture(FileSystem::getPath("resources/textures/glass.png").c_str());
 
 
     // shader configuration
     // --------------------
+    windowShader.use();
+    lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
+
     lightingShader.use();
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
@@ -248,6 +257,10 @@ int main() {
         lightingShader.setMat4("model", model);
 
 
+
+
+
+        lightingShader.use();
         // bind diffuse map
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -276,6 +289,32 @@ int main() {
         model = glm::scale(model, glm::vec3(1.0f, 5.0f, 1.0f));
         model = glm::translate(model, glm::vec3(4.5, 0.5, 4.5));
         lightingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+        //Draw window   --- MORA POSLEDNJE DA SE CRTA
+        windowShader.use();
+        windowShader.setVec3("dirLight.position", 0, 3.0f, 0);
+        windowShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        windowShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+        windowShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+        windowShader.setFloat("dirLight.constant", 0.5f);
+        windowShader.setFloat("dirLight.linear", 0.1f);
+        windowShader.setFloat("dirLight.quadratic", 0.05f);
+
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMapGlass);
+        // bind specular map
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, diffuseMapGlass);
+
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(1.0f, 5.0f, 8.0f));
+        model = glm::translate(model, glm::vec3(4.5, 0.5, 0));
+        windowShader.setMat4("projection", projection);
+        windowShader.setMat4("view", view);
+        windowShader.setMat4("model", model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
