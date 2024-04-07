@@ -1,6 +1,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "Texture.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -15,6 +16,8 @@
 #include <learnopengl/model.h>
 
 #include <iostream>
+
+#include <CubeData.h>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
@@ -161,23 +164,56 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("resources/shaders/model_loading.vs", "resources/shaders/model_loading.fs");
+    Shader lightingShader("resources/shaders/floor.vs", "resources/shaders/floor.fs");
+
 
     // load models
     // -----------
-    Model ourModel("resources/objects/moai/moai.obj");
-    ourModel.SetShaderTextureNamePrefix("material.");
-    
 
-    // draw in wireframe
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // first, configure the cube's VAO (and VBO)
+    unsigned int VBO, cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &VBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+
+    glBindVertexArray(cubeVAO);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // load textures (we now use a utility function to keep the code more organized)
+    // -----------------------------------------------------------------------------
+    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
+    unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
+    unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
+
+
+    // shader configuration
+    // --------------------
+    lightingShader.use();
+    lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
+
+
 
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window))
+    {
         // per-frame time logic
         // --------------------
-        float currentFrame = glfwGetTime();
+        float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
@@ -185,41 +221,65 @@ int main() {
         // -----
         processInput(window);
 
-
         // render
         // ------
-        glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // don't forget to enable shader before setting uniforms
-        ourShader.use();
-        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
-        ourShader.setVec3("pointLight.position", pointLight.position);
-        ourShader.setVec3("pointLight.ambient", pointLight.ambient);
-        ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
-        ourShader.setVec3("pointLight.specular", pointLight.specular);
-        ourShader.setFloat("pointLight.constant", pointLight.constant);
-        ourShader.setFloat("pointLight.linear", pointLight.linear);
-        ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
-        ourShader.setVec3("viewPosition", programState->camera.Position);
-        ourShader.setFloat("material.shininess", 32.0f);
+        // be sure to activate shader when setting uniforms/drawing objects
+        lightingShader.use();
+        lightingShader.setVec3("dirLight.position", 0, 3.0f, 0);
+        lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+        lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+        lightingShader.setFloat("dirLight.constant", 0.5f);
+        lightingShader.setFloat("dirLight.linear", 0.1f);
+        lightingShader.setFloat("dirLight.quadratic", 0.05f);
+
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
 
-        // render the loaded model
+
+        // world transformation
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model,
-                               programState->backpackPosition); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
+        lightingShader.setMat4("model", model);
 
-        if (programState->ImGuiEnabled)
-            DrawImGui(programState);
+
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        // bind specular map
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+
+        //Draw floor
+        glBindVertexArray(cubeVAO);
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(10.0f, 0.25f, 10.0f));
+        model = glm::translate(model, glm::vec3(0, 0, 0));
+        lightingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+        //Draw pillar
+        // bind diffuse map
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMapWall);
+        // bind specular map
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, diffuseMapWall);
+
+        model = glm::mat4(1.0f);
+        model = glm::scale(model, glm::vec3(1.0f, 5.0f, 1.0f));
+        model = glm::translate(model, glm::vec3(4.5, 0.5, 4.5));
+        lightingShader.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+
 
 
 
@@ -229,11 +289,11 @@ int main() {
         glfwPollEvents();
     }
 
-    programState->SaveToFile("resources/program_state.txt");
-    delete programState;
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteBuffers(1, &VBO);
+
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
@@ -246,14 +306,15 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    float speed = 2.0;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(FORWARD, deltaTime);
+        programState->camera.ProcessKeyboard(FORWARD, deltaTime*speed);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(BACKWARD, deltaTime);
+        programState->camera.ProcessKeyboard(BACKWARD, deltaTime*speed);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(LEFT, deltaTime);
+        programState->camera.ProcessKeyboard(LEFT, deltaTime*speed);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(RIGHT, deltaTime);
+        programState->camera.ProcessKeyboard(RIGHT, deltaTime*speed);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
