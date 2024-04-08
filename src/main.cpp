@@ -194,12 +194,12 @@ int main() {
     // shader configuration
     // --------------------
     windowShader.use();
-    lightingShader.setInt("material.diffuse", 0);
-    lightingShader.setInt("material.specular", 0);
+    windowShader.setInt("material.diffuse", 1);
+    windowShader.setInt("material.specular", 0);
 
     lightingShader.use();
-    lightingShader.setInt("material.diffuse", 0);
-    lightingShader.setInt("material.specular", 1);
+    lightingShader.setInt("material.diffuse", 1);
+    lightingShader.setInt("material.specular", 0);
 
     //Dodaj prozore <pozicija, velicina> kako bi mogli u render petlji da se sortiraju
     vector<std::pair<glm::vec3, glm::vec3>> prozori = {
