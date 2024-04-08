@@ -201,7 +201,13 @@ int main() {
     lightingShader.setInt("material.diffuse", 0);
     lightingShader.setInt("material.specular", 1);
 
-
+    //Dodaj prozore <pozicija, velicina> kako bi mogli u render petlji da se sortiraju
+    vector<std::pair<glm::vec3, glm::vec3>> prozori = {
+            {glm::vec3(9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
+            {glm::vec3(-9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
+            {glm::vec3(0, 2.5f, 4.5f), glm::vec3(18.0f, 5.0f, 0.5f)},
+            {glm::vec3(0, 2.5f, -4.5f), glm::vec3(18.0f, 5.0f, 0.5f)}
+    };
 
     // render loop
     // -----------
@@ -269,11 +275,24 @@ int main() {
         SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
 
 
-        //Window
-        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f));
-        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(-9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f));
-        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(0, 2.5f, 4.5f), glm::vec3(18.0f, 5.0f, 0.5f));
-        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(0, 2.5f, -4.5f), glm::vec3(18.0f, 5.0f, 0.5f));
+
+        //Sortiraj prozore
+        std::map<float, pair<glm::vec3, glm::vec3>> sorted;
+        for (unsigned int i = 0; i < prozori.size(); i++)
+        {
+            float distance = glm::length(programState->camera.Position - prozori[i].first);
+            sorted[distance] = prozori[i];
+        }
+
+
+        //Crtaj pocevsi od najblizeg
+        for(std::map<float, pair<glm::vec3,glm::vec3>>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
+        {
+
+            SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, it->second.first, it->second.second);
+        }
+
+
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -281,6 +300,8 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+
 
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
