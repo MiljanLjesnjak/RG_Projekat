@@ -6,8 +6,11 @@
 #define PROJECT_BASE_TEXTURE_H
 
 #include <iostream>
+#include <glm/ext/matrix_transform.hpp>
 #include "glad/glad.h"
 #include "stb_image.h"
+#include "learnopengl/shader.h"
+
 
 unsigned int loadTexture(const char *path);
 
@@ -31,6 +34,10 @@ unsigned int loadTexture(char const * path)
             format = GL_RGBA;
         }
         glBindTexture(GL_TEXTURE_2D, textureID);
+
+        //Mora jer neke teksture nisu korektne rezolucije (faktora 4)
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
 

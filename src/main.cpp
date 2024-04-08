@@ -17,7 +17,7 @@
 
 #include <iostream>
 
-#include <CubeData.h>
+#include <Cube.h>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
@@ -174,33 +174,20 @@ int main() {
     // load models
     // -----------
 
-    // first, configure the cube's VAO (and VBO)
-    unsigned int VBO, cubeVAO;
+    // configure cube VAOs (and VBOs)
+    unsigned int cubeVBO;
+    unsigned int cubeVAO;
+
+    glGenBuffers(1, &cubeVBO);
     glGenVertexArrays(1, &cubeVAO);
-    glGenBuffers(1, &VBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
-
-    glBindVertexArray(cubeVAO);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
 
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // note that we update the lamp's position attribute's stride to reflect the updated buffer data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
     unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
-    unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/container.jpg").c_str());
+    unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
     unsigned int diffuseMapGlass = loadTexture(FileSystem::getPath("resources/textures/glass.png").c_str());
 
 
@@ -208,7 +195,7 @@ int main() {
     // --------------------
     windowShader.use();
     lightingShader.setInt("material.diffuse", 0);
-    lightingShader.setInt("material.specular", 1);
+    lightingShader.setInt("material.specular", 0);
 
     lightingShader.use();
     lightingShader.setInt("material.diffuse", 0);
@@ -235,6 +222,13 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+
+
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = programState->camera.GetViewMatrix();
+
+
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.use();
         lightingShader.setVec3("dirLight.position", 0, 3.0f, 0);
@@ -244,55 +238,10 @@ int main() {
         lightingShader.setFloat("dirLight.constant", 0.5f);
         lightingShader.setFloat("dirLight.linear", 0.1f);
         lightingShader.setFloat("dirLight.quadratic", 0.05f);
-
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = programState->camera.GetViewMatrix();
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
+        //model se postavlja u pomocnoj funkciji
 
-
-        // world transformation
-        glm::mat4 model = glm::mat4(1.0f);
-        lightingShader.setMat4("model", model);
-
-
-
-
-
-        lightingShader.use();
-        // bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        // bind specular map
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
-
-        //Draw floor
-        glBindVertexArray(cubeVAO);
-        model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(10.0f, 0.25f, 10.0f));
-        model = glm::translate(model, glm::vec3(0, 0, 0));
-        lightingShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-        //Draw pillar
-        // bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMapWall);
-        // bind specular map
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, diffuseMapWall);
-
-        model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(1.0f, 5.0f, 1.0f));
-        model = glm::translate(model, glm::vec3(4.5, 0.5, 4.5));
-        lightingShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-
-        //Draw window   --- MORA POSLEDNJE DA SE CRTA
         windowShader.use();
         windowShader.setVec3("dirLight.position", 0, 3.0f, 0);
         windowShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
@@ -301,25 +250,30 @@ int main() {
         windowShader.setFloat("dirLight.constant", 0.5f);
         windowShader.setFloat("dirLight.linear", 0.1f);
         windowShader.setFloat("dirLight.quadratic", 0.05f);
-
-        // bind diffuse map
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMapGlass);
-        // bind specular map
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, diffuseMapGlass);
-
-        model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(1.0f, 5.0f, 8.0f));
-        model = glm::translate(model, glm::vec3(4.5, 0.5, 0));
         windowShader.setMat4("projection", projection);
         windowShader.setMat4("view", view);
-        windowShader.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        //model se postavlja u pomocnoj funkciji
+        //---------
+
+        //Floor
+        ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
+        SpawnCube(&lightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f));
 
 
+        //Pillars
+        ConfigureVAO(cubeVAO,cubeVBO, cubeVertices, sizeof(cubeVertices));
+
+        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
 
 
+        //Window
+        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f));
+        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(-9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f));
+        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(0, 2.5f, 4.5f), glm::vec3(18.0f, 5.0f, 0.5f));
+        SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, glm::vec3(0, 2.5f, -4.5f), glm::vec3(18.0f, 5.0f, 0.5f));
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -331,7 +285,7 @@ int main() {
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &cubeVAO);
-    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &cubeVBO);
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
