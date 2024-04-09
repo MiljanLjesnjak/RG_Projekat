@@ -164,6 +164,11 @@ int main() {
     //BLENDING
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //FACE CULLING
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+
 
     // build and compile shaders
     // -------------------------
@@ -203,10 +208,10 @@ int main() {
 
     //Dodaj prozore <pozicija, velicina> kako bi mogli u render petlji da se sortiraju
     vector<std::pair<glm::vec3, glm::vec3>> prozori = {
-            {glm::vec3(9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
-            {glm::vec3(-9.5f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
-            {glm::vec3(0, 2.5f, 4.5f), glm::vec3(18.0f, 5.0f, 0.5f)},
-            {glm::vec3(0, 2.5f, -4.5f), glm::vec3(18.0f, 5.0f, 0.5f)}
+            {glm::vec3(9.75f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
+            {glm::vec3(-9.75f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
+            {glm::vec3(0, 2.5f, 4.75f), glm::vec3(18.0f, 5.0f, 0.5f)},
+            {glm::vec3(0, 2.5f, -4.75f), glm::vec3(18.0f, 5.0f, 0.5f)}
     };
 
     // render loop
@@ -250,7 +255,7 @@ int main() {
 
         windowShader.use();
         windowShader.setVec3("dirLight.position", 0, 3.0f, 0);
-        windowShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+        windowShader.setVec3("dirLight.ambient", 0.1f, 0.1f, 0.5f);
         windowShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
         windowShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
         windowShader.setFloat("dirLight.constant", 0.5f);
@@ -260,6 +265,11 @@ int main() {
         windowShader.setMat4("view", view);
         //model se postavlja u pomocnoj funkciji
         //---------
+
+
+        //DRAW
+
+
 
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
@@ -273,7 +283,6 @@ int main() {
         SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
         SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
         SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-
 
 
         //Sortiraj prozore
