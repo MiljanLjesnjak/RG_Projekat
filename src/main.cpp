@@ -174,7 +174,7 @@ int main() {
     // -------------------------
     Shader lightingShader("resources/shaders/floor.vs", "resources/shaders/floor.fs");
     Shader windowShader("resources/shaders/window.vs", "resources/shaders/window.fs");
-
+    Shader advancedLightingShader("resources/shaders/advanced_lighting.vs", "resources/shaders/advanced_lighting.fs");
 
     // load models
     // -----------
@@ -264,6 +264,15 @@ int main() {
         windowShader.setMat4("projection", projection);
         windowShader.setMat4("view", view);
         //model se postavlja u pomocnoj funkciji
+
+        advancedLightingShader.use();
+        advancedLightingShader.setInt("texture1", 0);
+        advancedLightingShader.setMat4("projection", projection);
+        advancedLightingShader.setMat4("view", view);
+        advancedLightingShader.setVec3("viewPos", programState->camera.Position);
+        advancedLightingShader.setVec3("lightPos", glm::vec3(0, 3, 0));
+        advancedLightingShader.setInt("blinn", 1);
+
         //---------
 
 
@@ -273,16 +282,16 @@ int main() {
 
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
-        SpawnCube(&lightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f));
+        SpawnCube(&advancedLightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f));
 
 
         //Pillars
         ConfigureVAO(cubeVAO,cubeVBO, cubeVertices, sizeof(cubeVertices));
 
-        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&lightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
 
 
         //Sortiraj prozore
@@ -298,7 +307,7 @@ int main() {
         for(std::map<float, pair<glm::vec3,glm::vec3>>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
 
-            SpawnCube(&windowShader, &diffuseMapGlass, &cubeVAO, it->second.first, it->second.second);
+            SpawnCube(&advancedLightingShader, &diffuseMapGlass, &cubeVAO, it->second.first, it->second.second);
         }
 
 
