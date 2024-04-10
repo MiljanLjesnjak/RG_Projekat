@@ -17,7 +17,7 @@ void main()
     vec4 color = texture(diffuse, fs_in.TexCoords).rgba;
 
     // ambient
-    vec4 ambient = vec4(0.05, 0.05, 0.05, 1.0) * color;
+    vec4 ambient = vec4(0.05, 0.05, 0.1, 1.0) * color;
 
 
     // diffuse

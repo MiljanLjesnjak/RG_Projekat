@@ -172,7 +172,6 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    Shader lightingShader("resources/shaders/floor.vs", "resources/shaders/floor.fs");
     Shader windowShader("resources/shaders/window.vs", "resources/shaders/window.fs");
     Shader advancedLightingShader("resources/shaders/advanced_lighting.vs", "resources/shaders/advanced_lighting.fs");
 
@@ -193,7 +192,7 @@ int main() {
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
     unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
     unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
-    unsigned int diffuseMapGlass = loadTexture(FileSystem::getPath("resources/textures/glass.png").c_str());
+    unsigned int diffuseMapGlass = loadTexture(FileSystem::getPath("resources/textures/glass3.png").c_str());
 
 
     // shader configuration
@@ -202,9 +201,6 @@ int main() {
     windowShader.setInt("material.diffuse", 1);
     windowShader.setInt("material.specular", 0);
 
-    lightingShader.use();
-    lightingShader.setInt("material.diffuse", 1);
-    lightingShader.setInt("material.specular", 0);
 
     //Dodaj prozore <pozicija, velicina> kako bi mogli u render petlji da se sortiraju
     vector<std::pair<glm::vec3, glm::vec3>> prozori = {
@@ -240,19 +236,6 @@ int main() {
         glm::mat4 view = programState->camera.GetViewMatrix();
 
 
-        // be sure to activate shader when setting uniforms/drawing objects
-        lightingShader.use();
-        lightingShader.setVec3("dirLight.position", 0, 3.0f, 0);
-        lightingShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
-        lightingShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-        lightingShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
-        lightingShader.setFloat("dirLight.constant", 0.5f);
-        lightingShader.setFloat("dirLight.linear", 0.1f);
-        lightingShader.setFloat("dirLight.quadratic", 0.05f);
-        lightingShader.setMat4("projection", projection);
-        lightingShader.setMat4("view", view);
-        //model se postavlja u pomocnoj funkciji
-
         windowShader.use();
         windowShader.setVec3("dirLight.position", 0, 3.0f, 0);
         windowShader.setVec3("dirLight.ambient", 0.1f, 0.1f, 0.5f);
@@ -283,11 +266,11 @@ int main() {
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
         SpawnCube(&advancedLightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f));
+        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(0, 5.0f, 0), glm::vec3(20.0f, 0.25f, 10.0f));
 
 
         //Pillars
         ConfigureVAO(cubeVAO,cubeVBO, cubeVertices, sizeof(cubeVertices));
-
         SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
         SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
         SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
@@ -306,7 +289,6 @@ int main() {
         //Crtaj pocevsi od najblizeg
         for(std::map<float, pair<glm::vec3,glm::vec3>>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
-
             SpawnCube(&advancedLightingShader, &diffuseMapGlass, &cubeVAO, it->second.first, it->second.second);
         }
 

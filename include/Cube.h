@@ -28,8 +28,8 @@ void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::ve
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, *diff_map);
     // bind specular map
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, *diff_map);
+    //glActiveTexture(GL_TEXTURE1);
+    //glBindTexture(GL_TEXTURE_2D, *diff_map);
 
     //Draw cube
     glBindVertexArray(*VAO);
@@ -37,7 +37,7 @@ void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::ve
 
     //Mora u ovom redosledu transformacije ------------------------------------------------
     model = glm::translate(model, pos);
-    //rotatef
+    //rotate
     model = glm::scale(model, scale);
 
 
