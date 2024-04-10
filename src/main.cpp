@@ -2,6 +2,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "Texture.h"
+#include "Skybox.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -172,18 +173,27 @@ int main() {
 
     // build and compile shaders
     // -------------------------
-    Shader windowShader("resources/shaders/window.vs", "resources/shaders/window.fs");
     Shader advancedLightingShader("resources/shaders/advanced_lighting.vs", "resources/shaders/advanced_lighting.fs");
+    Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
 
     // load models
     // -----------
 
     // configure cube VAOs (and VBOs)
-    unsigned int cubeVBO;
-    unsigned int cubeVAO;
+    unsigned int cubeVBO, cubeVAO;
 
     glGenBuffers(1, &cubeVBO);
     glGenVertexArrays(1, &cubeVAO);
+
+    //skybox
+    unsigned int skyboxVAO, skyboxVBO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 
 
@@ -194,13 +204,14 @@ int main() {
     unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
     unsigned int diffuseMapGlass = loadTexture(FileSystem::getPath("resources/textures/glass3.png").c_str());
 
+    stbi_set_flip_vertically_on_load(false);
+    unsigned int cubemapTexture = loadCubemap(faces);
+
 
     // shader configuration
     // --------------------
-    windowShader.use();
-    windowShader.setInt("material.diffuse", 1);
-    windowShader.setInt("material.specular", 0);
-
+    skyboxShader.use();
+    skyboxShader.setInt("skybox", 0);
 
     //Dodaj prozore <pozicija, velicina> kako bi mogli u render petlji da se sortiraju
     vector<std::pair<glm::vec3, glm::vec3>> prozori = {
@@ -236,16 +247,6 @@ int main() {
         glm::mat4 view = programState->camera.GetViewMatrix();
 
 
-        windowShader.use();
-        windowShader.setVec3("dirLight.position", 0, 3.0f, 0);
-        windowShader.setVec3("dirLight.ambient", 0.1f, 0.1f, 0.5f);
-        windowShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-        windowShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
-        windowShader.setFloat("dirLight.constant", 0.5f);
-        windowShader.setFloat("dirLight.linear", 0.1f);
-        windowShader.setFloat("dirLight.quadratic", 0.05f);
-        windowShader.setMat4("projection", projection);
-        windowShader.setMat4("view", view);
         //model se postavlja u pomocnoj funkciji
 
         advancedLightingShader.use();
@@ -259,13 +260,11 @@ int main() {
         //---------
 
 
-        //DRAW
-
-
-
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
         SpawnCube(&advancedLightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f));
+
+        //Roof
         SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(0, 5.0f, 0), glm::vec3(20.0f, 0.25f, 10.0f));
 
 
@@ -277,6 +276,23 @@ int main() {
         SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
 
 
+
+        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        skyboxShader.use();
+        view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
+        view = glm::translate(view, glm::vec3(0, -0.5f, 0));    //prikazi skybox malo nize
+        skyboxShader.setMat4("view", view);
+        skyboxShader.setMat4("projection", projection);
+        // skybox cube
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
+
+
+        //Prozori idu posle ostalih objekata zbog blendinga
         //Sortiraj prozore
         std::map<float, pair<glm::vec3, glm::vec3>> sorted;
         for (unsigned int i = 0; i < prozori.size(); i++)
@@ -306,7 +322,11 @@ int main() {
     // optional: de-allocate all resources once they've outlived their purpose:
     // ------------------------------------------------------------------------
     glDeleteVertexArrays(1, &cubeVAO);
+    glDeleteVertexArrays(1, &skyboxVAO);
     glDeleteBuffers(1, &cubeVBO);
+    glDeleteBuffers(1, &skyboxVBO);
+
+
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------

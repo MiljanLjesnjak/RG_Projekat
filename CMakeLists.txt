@@ -43,7 +43,7 @@ include_directories(${CMAKE_BINARY_DIR}/configuration)
 
 include_directories(include/)
 add_executable(${PROJECT_NAME}
-        ${SOURCES} include/Cube.h include/Texture.h)
+        ${SOURCES} include/Cube.h include/Texture.h include/Skybox.h)
 
 target_link_libraries(${PROJECT_NAME} ${LIBS})
 
