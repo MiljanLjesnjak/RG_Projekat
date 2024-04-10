@@ -178,6 +178,9 @@ int main() {
 
     // load models
     // -----------
+    Model moai("resources/objects/moai/buddha.obj");
+    moai.SetShaderTextureNamePrefix("material.");
+
 
     // configure cube VAOs (and VBOs)
     unsigned int cubeVBO, cubeVAO;
@@ -241,14 +244,12 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
 
 
         //model se postavlja u pomocnoj funkciji
-
         advancedLightingShader.use();
         advancedLightingShader.setInt("texture1", 0);
         advancedLightingShader.setMat4("projection", projection);
@@ -257,8 +258,18 @@ int main() {
         advancedLightingShader.setVec3("lightPos", glm::vec3(0, 3, 0));
         advancedLightingShader.setInt("blinn", 1);
 
+        //DRAW
         //---------
 
+        //Modeli
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(8, 0.5f + sin(currentFrame)*0.5, -3.0f));
+
+       model = glm::rotate(model, glm::radians(50 * cos(currentFrame * 0.01f)*360), glm::vec3(0, 1, 0));
+
+        model = glm::scale(model, glm::vec3(3));
+        advancedLightingShader.setMat4("model", model);
+        moai.Draw(advancedLightingShader);
 
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
