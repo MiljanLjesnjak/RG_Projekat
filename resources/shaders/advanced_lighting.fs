@@ -55,9 +55,11 @@ uniform bool blinn;
 
 //-----------------
 
+#define SPOT_LIGHTS_AMOUNT 4
+
 uniform DirLight dirLight;
 uniform PointLight pointLight;
-uniform SpotLight spotLight;
+uniform SpotLight spotLights[SPOT_LIGHTS_AMOUNT];
 
 vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
 vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
@@ -69,9 +71,11 @@ void main()
     vec3 viewDir = normalize(viewPos - fs_in.FragPos);
 
     FragColor = CalcDirLight(dirLight, normal, viewDir);
-    FragColor += CalcPointLight(pointLight, normal, fs_in.FragPos, viewDir);
-    FragColor += CalcSpotLight(spotLight, normal, fs_in.FragPos, viewDir);
 
+    FragColor += CalcPointLight(pointLight, normal, fs_in.FragPos, viewDir);
+
+    for(int i=0; i < SPOT_LIGHTS_AMOUNT; i++)
+        FragColor += CalcSpotLight(spotLights[i], normal, fs_in.FragPos, viewDir);
 }
 
 vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
@@ -100,7 +104,7 @@ vec4 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
             vec3 reflectDir = reflect(-lightDir, normal);
             spec = pow(max(dot(viewDir, reflectDir), 0.0), 8.0);
         }
-        vec4 specular = vec4(light.specular, 0.5f) * spec * specularColor; // assuming bright white light color
+        vec4 specular = vec4(light.specular, 1) * spec * specularColor; // assuming bright white light color
 
         return (ambient + diffuse + specular);
 }
@@ -131,7 +135,7 @@ vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
         vec3 reflectDir = reflect(-lightDir, normal);
         spec = pow(max(dot(viewDir, reflectDir), 0.0), 8.0);
     }
-    vec4 specular = vec4(light.specular, 0.5f) * spec * specularColor; // assuming bright white light color
+    vec4 specular = vec4(light.specular, 1) * spec * specularColor; // assuming bright white light color
 
     // attenuation
     float distance = length(light.position - fragPos);
@@ -170,7 +174,7 @@ vec4 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
             vec3 reflectDir = reflect(-lightDir, normal);
             spec = pow(max(dot(viewDir, reflectDir), 0.0), 8.0);
         }
-        vec4 specular = vec4(light.specular, 0.5f) * spec * specularColor; // assuming bright white light color
+        vec4 specular = vec4(light.specular, 1) * spec * specularColor; // assuming bright white light color
 
         // attenuation
         float distance = length(light.position - fragPos);

@@ -67,6 +67,7 @@ struct ProgramState {
     glm::vec3 backpackPosition = glm::vec3(0.0f);
     float backpackScale = 1.0f;
     SpotLight spotLight;
+
     ProgramState()
             : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
 
@@ -159,7 +160,6 @@ int main() {
     (void) io;
 
 
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
@@ -200,7 +200,7 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
 
 
 
@@ -224,9 +224,9 @@ int main() {
 
     //Dodaj prozore <pozicija, velicina> kako bi mogli u render petlji da se sortiraju
     vector<std::pair<glm::vec3, glm::vec3>> prozori = {
-            {glm::vec3(9.75f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
-            {glm::vec3(-9.75f, 2.5, 0), glm::vec3(0.5f, 5.0f, 8.0f)},
-            {glm::vec3(0, 2.5f, 4.75f), glm::vec3(18.0f, 5.0f, 0.5f)},
+            {glm::vec3(9.75f, 2.5, 0),   glm::vec3(0.5f, 5.0f, 8.0f)},
+            {glm::vec3(-9.75f, 2.5, 0),  glm::vec3(0.5f, 5.0f, 8.0f)},
+            {glm::vec3(0, 2.5f, 4.75f),  glm::vec3(18.0f, 5.0f, 0.5f)},
             {glm::vec3(0, 2.5f, -4.75f), glm::vec3(18.0f, 5.0f, 0.5f)}
     };
 
@@ -235,37 +235,43 @@ int main() {
 
     //Directional light
     advancedLightingShader.setVec3("dirLight.direction", glm::vec3(-0.4, -0.5f, -0.075));
-    advancedLightingShader.setVec3("dirLight.ambient", glm::vec3(0.05f, 0.1f, 0.05f));
-    advancedLightingShader.setVec3("dirLight.diffuse", glm::vec3(0.075,0.225,0.175));
-    advancedLightingShader.setVec3("dirLight.specular", glm::vec3(0,0.25,0));
+    advancedLightingShader.setVec3("dirLight.ambient", glm::vec3(0.025f, 0.05f, 0.025f));
+    advancedLightingShader.setVec3("dirLight.diffuse", glm::vec3(0.075, 0.25, 0.175));
+    advancedLightingShader.setVec3("dirLight.specular", glm::vec3(0, 0.05, 0));
 
     //Point light
-    advancedLightingShader.setVec3("pointLight.position", glm::vec3(0, 4.75f, 0));
+    advancedLightingShader.setVec3("pointLight.position", glm::vec3(0, 4.5f, 0));
+    advancedLightingShader.setVec3("pointLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+    advancedLightingShader.setVec3("pointLight.diffuse", glm::vec3(0.8f, 0.55f, 0));
+    advancedLightingShader.setVec3("pointLight.specular", glm::vec3(0.5f, 0.3f, 0));
     advancedLightingShader.setFloat("pointLight.constant", 1.0f);
     advancedLightingShader.setFloat("pointLight.linear", 0.07f);
     advancedLightingShader.setFloat("pointLight.quadratic", 0.017f);
-    advancedLightingShader.setVec3("pointLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-    advancedLightingShader.setVec3("pointLight.diffuse", glm::vec3(0.8f, 0.8f, 0));
-    advancedLightingShader.setVec3("pointLight.specular", glm::vec3(0.5f));
 
-    //Spotlight
-    advancedLightingShader.setVec3("spotLight.position", glm::vec3(8, 4.75f, -3));
-    advancedLightingShader.setVec3("spotLight.direction", glm::vec3(0,-1,0));
 
-    advancedLightingShader.setVec3("spotLight.ambient", glm::vec3(0.25f, 0.25f, 0.5f));
-    advancedLightingShader.setVec3("spotLight.diffuse", glm::vec3(1));
-    advancedLightingShader.setVec3("spotLight.specular", glm::vec3(1));
-    advancedLightingShader.setFloat("spotLight.constant", 1.0f);
-    advancedLightingShader.setFloat("spotLight.linear", 0.045f);
-    advancedLightingShader.setFloat("spotLight.quadratic", 0.0075f);
-    advancedLightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(5.0f)));
-    advancedLightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
+
+
+    //Spotlights
+    //advancedLightingShader.setVec3(spotLightIt+".position", glm::vec3(8, 4.75f, -3));
+    for (int i = 0; i < 4; i++) {
+        string spotLightIt = "spotLights[" + to_string(i) + "]";
+        advancedLightingShader.setVec3(spotLightIt + ".direction", glm::vec3(0, -1, 0));
+        advancedLightingShader.setVec3(spotLightIt + ".ambient", glm::vec3(0.25f, 0.25f, 0.5f));
+        advancedLightingShader.setVec3(spotLightIt + ".diffuse", glm::vec3(1));
+        advancedLightingShader.setVec3(spotLightIt + ".specular", glm::vec3(1));
+        advancedLightingShader.setFloat(spotLightIt + ".constant", 1.0f);
+        advancedLightingShader.setFloat(spotLightIt + ".linear", 0.045f);
+        advancedLightingShader.setFloat(spotLightIt + ".quadratic", 0.0075f);
+        advancedLightingShader.setFloat(spotLightIt + ".cutOff", glm::cos(glm::radians(5.0f)));
+        advancedLightingShader.setFloat(spotLightIt + ".outerCutOff", glm::cos(glm::radians(15.0f)));
+    }
+
+
 
 
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window))
-    {
+    while (!glfwWindowShouldClose(window)) {
         // per-frame time logic
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -283,14 +289,15 @@ int main() {
 
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = programState->camera.GetViewMatrix();
 
 
         //model se postavlja u pomocnoj funkciji
         advancedLightingShader.use();
 
-        if(programState->ImGuiEnabled) {
+        if (programState->ImGuiEnabled) {
             advancedLightingShader.setVec3("spotLight.ambient", programState->spotLight.ambient);
             advancedLightingShader.setVec3("spotLight.diffuse", programState->spotLight.diffuse);
             advancedLightingShader.setVec3("spotLight.specular", programState->spotLight.specular);
@@ -298,10 +305,12 @@ int main() {
             advancedLightingShader.setFloat("spotLight.linear", programState->spotLight.linear);
             advancedLightingShader.setFloat("spotLight.quadratic", programState->spotLight.quadratic);
             advancedLightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(programState->spotLight.cutOff)));
-            advancedLightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(programState->spotLight.outerCutOff)));
+            advancedLightingShader.setFloat("spotLight.outerCutOff",
+                                            glm::cos(glm::radians(programState->spotLight.outerCutOff)));
         }
 
-        advancedLightingShader.setInt("material.diffuseMap", 0);    //ova 2 moraju u petlji jer ce za neke kocke koje se crtaju posle
+        advancedLightingShader.setInt("material.diffuseMap",
+                                      0);    //ova 2 moraju u petlji jer ce za neke kocke koje se crtaju posle
         advancedLightingShader.setInt("material.specularMap", 1);   //specularMap biti postavljeno na 0
         advancedLightingShader.setMat4("projection", projection);
         advancedLightingShader.setMat4("view", view);
@@ -314,34 +323,40 @@ int main() {
 
         //Modeli
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(8, 1.5f + sin(currentFrame)*0.5, -3.0f));
-
-       model = glm::rotate(model, glm::radians(50 * cos(currentFrame * 0.01f)*360), glm::vec3(0, 1, 0));
-
+        model = glm::translate(model, glm::vec3(8, 1.5f + sin(currentFrame) * 0.5, -3.0f));
+        model = glm::rotate(model, glm::radians(50 * cos(currentFrame * 0.01f) * 360), glm::vec3(0, 1, 0));
         model = glm::scale(model, glm::vec3(0.5f));
         advancedLightingShader.setMat4("model", model);
         moai.Draw(advancedLightingShader);
 
+        advancedLightingShader.setVec3("spotLights[0].position", glm::vec3(8, 4.75f, -3));
+
 
 
         //Floor
-        ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
-        SpawnCube(&advancedLightingShader, &floorDiffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f), &floorSpecularMap);
+        ConfigureVAO(cubeVAO, cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
+        SpawnCube(&advancedLightingShader, &floorDiffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f),
+                  &floorSpecularMap);
 
         //Roof
-        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(0, 5.0f, 0), glm::vec3(20.0f, 0.25f, 10.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(0, 5.0f, 0),
+                  glm::vec3(20.0f, 0.25f, 10.0f));
 
 
         //Pillars
-        ConfigureVAO(cubeVAO,cubeVBO, cubeVertices, sizeof(cubeVertices));
-        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        ConfigureVAO(cubeVAO, cubeVBO, cubeVertices, sizeof(cubeVertices));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f),
+                  glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f),
+                  glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f),
+                  glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f),
+                  glm::vec3(1.0f, 5.0f, 1.0f));
 
 
-
-        glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
+        glDepthFunc(
+                GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
         skyboxShader.use();
         view = glm::mat4(glm::mat3(programState->camera.GetViewMatrix())); // remove translation from the view matrix
         view = glm::translate(view, glm::vec3(0, -0.5f, 0));    //prikazi skybox malo nize
@@ -359,21 +374,21 @@ int main() {
         //Prozori idu posle ostalih objekata zbog blendinga
         //Sortiraj prozore
         std::map<float, pair<glm::vec3, glm::vec3>> sorted;
-        for (unsigned int i = 0; i < prozori.size(); i++)
-        {
+        for (unsigned int i = 0; i < prozori.size(); i++) {
             float distance = glm::length(programState->camera.Position - prozori[i].first);
             sorted[distance] = prozori[i];
         }
 
 
         //Crtaj pocevsi od najblizeg
-        for(std::map<float, pair<glm::vec3,glm::vec3>>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
-        {
-            SpawnCube(&advancedLightingShader, &glassDiffuseMap, &cubeVAO, it->second.first, it->second.second, &glassSpecularMap);
+        for (std::map<float, pair<glm::vec3, glm::vec3>>::reverse_iterator it = sorted.rbegin();
+             it != sorted.rend(); ++it) {
+            SpawnCube(&advancedLightingShader, &glassDiffuseMap, &cubeVAO, it->second.first, it->second.second,
+                      &glassSpecularMap);
         }
 
 
-        if(programState->ImGuiEnabled)
+        if (programState->ImGuiEnabled)
             DrawImGui(programState);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -413,13 +428,13 @@ void processInput(GLFWwindow *window) {
 
     float speed = 2.0;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(FORWARD, deltaTime*speed);
+        programState->camera.ProcessKeyboard(FORWARD, deltaTime * speed);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(BACKWARD, deltaTime*speed);
+        programState->camera.ProcessKeyboard(BACKWARD, deltaTime * speed);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(LEFT, deltaTime*speed);
+        programState->camera.ProcessKeyboard(LEFT, deltaTime * speed);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        programState->camera.ProcessKeyboard(RIGHT, deltaTime*speed);
+        programState->camera.ProcessKeyboard(RIGHT, deltaTime * speed);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -465,9 +480,9 @@ void DrawImGui(ProgramState *programState) {
         static float f = 0.0f;
         ImGui::Begin("Spot light");
 
-        ImGui::DragFloat3("spotLight.ambient", (float*)&programState->spotLight.ambient);
-        ImGui::DragFloat3("spotLight.diffuse", (float*)&programState->spotLight.diffuse);
-        ImGui::DragFloat3("spotLight.specular", (float*)&programState->spotLight.specular);
+        ImGui::DragFloat3("spotLight.ambient", (float *) &programState->spotLight.ambient);
+        ImGui::DragFloat3("spotLight.diffuse", (float *) &programState->spotLight.diffuse);
+        ImGui::DragFloat3("spotLight.specular", (float *) &programState->spotLight.specular);
 
 
         ImGui::DragFloat("spotLight.cutOff", &programState->spotLight.cutOff, 0.05, 0.0, 180.0);
@@ -481,7 +496,7 @@ void DrawImGui(ProgramState *programState) {
 
     {
         ImGui::Begin("Camera info");
-        const Camera& c = programState->camera;
+        const Camera &c = programState->camera;
         ImGui::Text("Camera position: (%f, %f, %f)", c.Position.x, c.Position.y, c.Position.z);
         ImGui::Text("(Yaw, Pitch): (%f, %f)", c.Yaw, c.Pitch);
         ImGui::Text("Camera front: (%f, %f, %f)", c.Front.x, c.Front.y, c.Front.z);
