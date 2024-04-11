@@ -44,25 +44,29 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-struct PointLight {
+struct SpotLight {
     glm::vec3 position;
-    glm::vec3 ambient;
-    glm::vec3 diffuse;
-    glm::vec3 specular;
+    glm::vec3 direction;
+    float cutOff;
+    float outerCutOff;
 
     float constant;
     float linear;
     float quadratic;
+
+    glm::vec3 ambient;
+    glm::vec3 diffuse;
+    glm::vec3 specular;
 };
 
 struct ProgramState {
     glm::vec3 clearColor = glm::vec3(0);
-    bool ImGuiEnabled = false;
+    bool ImGuiEnabled = true;
     Camera camera;
     bool CameraMouseMovementUpdateEnabled = true;
     glm::vec3 backpackPosition = glm::vec3(0.0f);
     float backpackScale = 1.0f;
-    PointLight pointLight;
+    SpotLight spotLight;
     ProgramState()
             : camera(glm::vec3(0.0f, 0.0f, 3.0f)) {}
 
@@ -227,14 +231,35 @@ int main() {
     };
 
     advancedLightingShader.use();
-    advancedLightingShader.setVec3("pointLight.position", glm::vec3(0, 3, 0));
+    advancedLightingShader.setInt("blinn", 1);
+
+    //Directional light
+    advancedLightingShader.setVec3("dirLight.direction", glm::vec3(-0.4, -0.5f, -0.075));
+    advancedLightingShader.setVec3("dirLight.ambient", glm::vec3(0.05f, 0.1f, 0.05f));
+    advancedLightingShader.setVec3("dirLight.diffuse", glm::vec3(0.075,0.225,0.175));
+    advancedLightingShader.setVec3("dirLight.specular", glm::vec3(0,0.25,0));
+
+    //Point light
+    advancedLightingShader.setVec3("pointLight.position", glm::vec3(0, 4.75f, 0));
     advancedLightingShader.setFloat("pointLight.constant", 1.0f);
-    advancedLightingShader.setFloat("pointLight.linear", 0.045f);
-    advancedLightingShader.setFloat("pointLight.quadratic", 0.0075f);
-    advancedLightingShader.setVec3("pointLight.ambient", glm::vec3(0.05f, 0.15f, 0.05f));
-    advancedLightingShader.setVec3("pointLight.diffuse", glm::vec3(0.8f));
+    advancedLightingShader.setFloat("pointLight.linear", 0.07f);
+    advancedLightingShader.setFloat("pointLight.quadratic", 0.017f);
+    advancedLightingShader.setVec3("pointLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+    advancedLightingShader.setVec3("pointLight.diffuse", glm::vec3(0.8f, 0.8f, 0));
     advancedLightingShader.setVec3("pointLight.specular", glm::vec3(0.5f));
 
+    //Spotlight
+    advancedLightingShader.setVec3("spotLight.position", glm::vec3(8, 4.75f, -3));
+    advancedLightingShader.setVec3("spotLight.direction", glm::vec3(0,-1,0));
+
+    advancedLightingShader.setVec3("spotLight.ambient", glm::vec3(0.25f, 0.25f, 0.5f));
+    advancedLightingShader.setVec3("spotLight.diffuse", glm::vec3(1));
+    advancedLightingShader.setVec3("spotLight.specular", glm::vec3(1));
+    advancedLightingShader.setFloat("spotLight.constant", 1.0f);
+    advancedLightingShader.setFloat("spotLight.linear", 0.045f);
+    advancedLightingShader.setFloat("spotLight.quadratic", 0.0075f);
+    advancedLightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(5.0f)));
+    advancedLightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
 
     // render loop
@@ -264,13 +289,25 @@ int main() {
 
         //model se postavlja u pomocnoj funkciji
         advancedLightingShader.use();
-        advancedLightingShader.setInt("material.diffuseMap", 0);
-        advancedLightingShader.setInt("material.specularMap", 1);
+
+        if(programState->ImGuiEnabled) {
+            advancedLightingShader.setVec3("spotLight.ambient", programState->spotLight.ambient);
+            advancedLightingShader.setVec3("spotLight.diffuse", programState->spotLight.diffuse);
+            advancedLightingShader.setVec3("spotLight.specular", programState->spotLight.specular);
+            advancedLightingShader.setFloat("spotLight.constant", programState->spotLight.constant);
+            advancedLightingShader.setFloat("spotLight.linear", programState->spotLight.linear);
+            advancedLightingShader.setFloat("spotLight.quadratic", programState->spotLight.quadratic);
+            advancedLightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(programState->spotLight.cutOff)));
+            advancedLightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(programState->spotLight.outerCutOff)));
+        }
+
+        advancedLightingShader.setInt("material.diffuseMap", 0);    //ova 2 moraju u petlji jer ce za neke kocke koje se crtaju posle
+        advancedLightingShader.setInt("material.specularMap", 1);   //specularMap biti postavljeno na 0
         advancedLightingShader.setMat4("projection", projection);
         advancedLightingShader.setMat4("view", view);
         advancedLightingShader.setVec3("viewPos", programState->camera.Position);
         //advancedLightingShader.setVec3("lightPos", glm::vec3(0, 3, 0));
-        advancedLightingShader.setInt("blinn", 1);
+
 
         //DRAW
         //---------
@@ -336,6 +373,9 @@ int main() {
         }
 
 
+        if(programState->ImGuiEnabled)
+            DrawImGui(programState);
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
@@ -350,6 +390,12 @@ int main() {
     glDeleteVertexArrays(1, &skyboxVAO);
     glDeleteBuffers(1, &cubeVBO);
     glDeleteBuffers(1, &skyboxVBO);
+
+    programState->SaveToFile("resources/program_state.txt");
+    delete programState;
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
 
 
@@ -417,16 +463,19 @@ void DrawImGui(ProgramState *programState) {
 
     {
         static float f = 0.0f;
-        ImGui::Begin("Hello window");
-        ImGui::Text("Hello text");
-        ImGui::SliderFloat("Float slider", &f, 0.0, 1.0);
-        ImGui::ColorEdit3("Background color", (float *) &programState->clearColor);
-        ImGui::DragFloat3("Backpack position", (float*)&programState->backpackPosition);
-        ImGui::DragFloat("Backpack scale", &programState->backpackScale, 0.05, 0.1, 4.0);
+        ImGui::Begin("Spot light");
 
-        ImGui::DragFloat("pointLight.constant", &programState->pointLight.constant, 0.05, 0.0, 1.0);
-        ImGui::DragFloat("pointLight.linear", &programState->pointLight.linear, 0.05, 0.0, 1.0);
-        ImGui::DragFloat("pointLight.quadratic", &programState->pointLight.quadratic, 0.05, 0.0, 1.0);
+        ImGui::DragFloat3("spotLight.ambient", (float*)&programState->spotLight.ambient);
+        ImGui::DragFloat3("spotLight.diffuse", (float*)&programState->spotLight.diffuse);
+        ImGui::DragFloat3("spotLight.specular", (float*)&programState->spotLight.specular);
+
+
+        ImGui::DragFloat("spotLight.cutOff", &programState->spotLight.cutOff, 0.05, 0.0, 180.0);
+        ImGui::DragFloat("spotLight.outerCutOff", &programState->spotLight.outerCutOff, 0.05, 0.0, 180.0);
+
+        ImGui::DragFloat("spotLight.constant", &programState->spotLight.constant, 0.05, 0.0, 1.0);
+        ImGui::DragFloat("spotLight.linear", &programState->spotLight.linear, 0.05, 0.0, 1.0);
+        ImGui::DragFloat("spotLight.quadratic", &programState->spotLight.quadratic, 0.05, 0.0, 1.0);
         ImGui::End();
     }
 
