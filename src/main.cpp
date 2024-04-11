@@ -179,11 +179,32 @@ int main() {
     // -------------------------
     Shader advancedLightingShader("resources/shaders/advanced_lighting.vs", "resources/shaders/advanced_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
+    Shader lightSource("resources/shaders/light_cube.vs", "resources/shaders/light_cube.fs");
+
+
 
     // load models
     // -----------
-    Model moai("resources/objects/backpack/backpack.obj");
+    Model moai("resources/objects/moai/moai.obj");
     moai.SetShaderTextureNamePrefix("material.");
+
+    Model lucy("resources/objects/lucy/Stanford's Lucy Angel.obj");
+    lucy.SetShaderTextureNamePrefix("material.");
+
+    Model venus("resources/objects/venus/venus.obj");
+    venus.SetShaderTextureNamePrefix("material.");
+
+    Model spotlightObj("resources/objects/Spotlight.obj");
+    spotlightObj.SetShaderTextureNamePrefix("material.");
+
+    Model ceilingLamp("resources/objects/CeilingLamp.obj");
+    ceilingLamp.SetShaderTextureNamePrefix("material.");
+
+
+
+
+
+
 
 
     // configure cube VAOs (and VBOs)
@@ -236,23 +257,27 @@ int main() {
     //Directional light
     advancedLightingShader.setVec3("dirLight.direction", glm::vec3(-0.4, -0.5f, -0.075));
     advancedLightingShader.setVec3("dirLight.ambient", glm::vec3(0.025f, 0.05f, 0.025f));
-    advancedLightingShader.setVec3("dirLight.diffuse", glm::vec3(0.075, 0.25, 0.175));
-    advancedLightingShader.setVec3("dirLight.specular", glm::vec3(0, 0.05, 0));
+    advancedLightingShader.setVec3("dirLight.diffuse", glm::vec3(0.075, 0.275, 0.175));
+    advancedLightingShader.setVec3("dirLight.specular", glm::vec3(0.05, 0.15, 0.05));
 
     //Point light
-    advancedLightingShader.setVec3("pointLight.position", glm::vec3(0, 4.5f, 0));
-    advancedLightingShader.setVec3("pointLight.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-    advancedLightingShader.setVec3("pointLight.diffuse", glm::vec3(0.8f, 0.55f, 0));
+    advancedLightingShader.setVec3("pointLight.position", glm::vec3(-4, 4.2f, 0));
+    advancedLightingShader.setVec3("pointLight.ambient", glm::vec3(0.1f, 0.1f, 0.05f));
+    advancedLightingShader.setVec3("pointLight.diffuse", glm::vec3(0.4f, 0.35f, 0));
     advancedLightingShader.setVec3("pointLight.specular", glm::vec3(0.5f, 0.3f, 0));
     advancedLightingShader.setFloat("pointLight.constant", 1.0f);
-    advancedLightingShader.setFloat("pointLight.linear", 0.07f);
-    advancedLightingShader.setFloat("pointLight.quadratic", 0.017f);
+    advancedLightingShader.setFloat("pointLight.linear", 0.045f);
+    advancedLightingShader.setFloat("pointLight.quadratic", 0.0075f);
 
 
 
 
     //Spotlights
-    //advancedLightingShader.setVec3(spotLightIt+".position", glm::vec3(8, 4.75f, -3));
+    advancedLightingShader.setVec3("spotLights[0].position", glm::vec3(8, 5.5f, -3));
+    advancedLightingShader.setVec3("spotLights[1].position", glm::vec3(8, 5.5f, 3));
+    advancedLightingShader.setVec3("spotLights[2].position", glm::vec3(8, 5.5f, 0));
+
+
     for (int i = 0; i < 4; i++) {
         string spotLightIt = "spotLights[" + to_string(i) + "]";
         advancedLightingShader.setVec3(spotLightIt + ".direction", glm::vec3(0, -1, 0));
@@ -262,10 +287,9 @@ int main() {
         advancedLightingShader.setFloat(spotLightIt + ".constant", 1.0f);
         advancedLightingShader.setFloat(spotLightIt + ".linear", 0.045f);
         advancedLightingShader.setFloat(spotLightIt + ".quadratic", 0.0075f);
-        advancedLightingShader.setFloat(spotLightIt + ".cutOff", glm::cos(glm::radians(5.0f)));
+        advancedLightingShader.setFloat(spotLightIt + ".cutOff", glm::cos(glm::radians(10.0f)));
         advancedLightingShader.setFloat(spotLightIt + ".outerCutOff", glm::cos(glm::radians(15.0f)));
     }
-
 
 
 
@@ -309,8 +333,7 @@ int main() {
                                             glm::cos(glm::radians(programState->spotLight.outerCutOff)));
         }
 
-        advancedLightingShader.setInt("material.diffuseMap",
-                                      0);    //ova 2 moraju u petlji jer ce za neke kocke koje se crtaju posle
+        advancedLightingShader.setInt("material.diffuseMap",0);    //ova 2 moraju u petlji jer ce za neke kocke koje se crtaju posle
         advancedLightingShader.setInt("material.specularMap", 1);   //specularMap biti postavljeno na 0
         advancedLightingShader.setMat4("projection", projection);
         advancedLightingShader.setMat4("view", view);
@@ -322,14 +345,84 @@ int main() {
         //---------
 
         //Modeli
+        //----------------
+
+        advancedLightingShader.setInt("blending", 0);
+
+        //MOAI
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(8, 1.5f + sin(currentFrame) * 0.5, -3.0f));
+        model = glm::translate(model, glm::vec3(8, 0.75f + sin(currentFrame) * 0.5, 0));
         model = glm::rotate(model, glm::radians(50 * cos(currentFrame * 0.01f) * 360), glm::vec3(0, 1, 0));
-        model = glm::scale(model, glm::vec3(0.5f));
+        model = glm::scale(model, glm::vec3(0.0375f));
         advancedLightingShader.setMat4("model", model);
         moai.Draw(advancedLightingShader);
 
-        advancedLightingShader.setVec3("spotLights[0].position", glm::vec3(8, 4.75f, -3));
+
+        //LUCY
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(8, 0, 3.0f));
+        model = glm::rotate(model, glm::radians(25 * cos(15 + currentFrame * 0.01f) * 360), glm::vec3(0, 1, 0));
+        model = glm::scale(model, glm::vec3(0.025f));
+        advancedLightingShader.setMat4("model", model);
+        lucy.Draw(advancedLightingShader);
+
+        //VENUS
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(8, 0.1f, -3));
+        model = glm::rotate(model, glm::radians(-10 * cos(45 + currentFrame * 0.01f) * 360), glm::vec3(0, 1, 0));
+        model = glm::scale(model, glm::vec3(0.0185f));
+        advancedLightingShader.setMat4("model", model);
+        venus.Draw(advancedLightingShader);
+
+
+
+        //Spot light models
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(8, 4.75f, -3));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1, 0, 0));
+        model = glm::scale(model, glm::vec3(3));
+        advancedLightingShader.setMat4("model", model);
+        spotlightObj.Draw(advancedLightingShader);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(8, 4.75f, 0));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1, 0, 0));
+        model = glm::scale(model, glm::vec3(3));
+        advancedLightingShader.setMat4("model", model);
+        spotlightObj.Draw(advancedLightingShader);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(8, 4.75f, 3));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1, 0, 0));
+        model = glm::scale(model, glm::vec3(3));
+        advancedLightingShader.setMat4("model", model);
+        spotlightObj.Draw(advancedLightingShader);
+
+        //Ceiling lamp
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-4, 2.5f, 0));
+        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1, 0, 0));
+        model = glm::scale(model, glm::vec3(0.5));
+        advancedLightingShader.setMat4("model", model);
+        ceilingLamp.Draw(advancedLightingShader);
+
+        //Light source for ceiling lamp
+        ConfigureVAO(cubeVAO, cubeVBO, cubeVertices, sizeof(cubeVertices));
+        lightSource.use();
+        lightSource.setMat4("projection", projection);
+        lightSource.setMat4("view", view);
+
+        lightSource.setVec3("color", glm::vec3(1, 1, 0));
+
+        //Draw cube
+        glBindVertexArray(cubeVAO);
+        model = glm::mat4(1.0f);
+        //Mora u ovom redosledu transformacije ------------------------------------------------
+        model = glm::translate(model, glm::vec3(-4, 4.125f, 0));
+        //rotate
+        model = glm::scale(model, glm::vec3(0.2f, 0.75f, 0.2f));
+        lightSource.setMat4("model", model);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
 
@@ -370,6 +463,9 @@ int main() {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
+
+        advancedLightingShader.use();
+        advancedLightingShader.setInt("blending", 1);
 
         //Prozori idu posle ostalih objekata zbog blendinga
         //Sortiraj prozore
