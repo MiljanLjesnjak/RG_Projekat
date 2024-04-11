@@ -21,7 +21,7 @@ uniform bool blinn;
 void main()
 {
     vec4 diffuseColor = texture(material.diffuseMap, fs_in.TexCoords).rgba;
-    vec4 specularColor = texture(material.specularMap, fs_in.TexCoords).rgba;
+    vec4 specularColor = vec4(texture(material.specularMap, fs_in.TexCoords).rrr, 1.0);
 
     // ambient
     vec4 ambient = vec4(0.05, 0.15, 0.05, 1.0) * diffuseColor;

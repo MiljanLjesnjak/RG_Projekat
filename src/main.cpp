@@ -178,7 +178,7 @@ int main() {
 
     // load models
     // -----------
-    Model moai("resources/objects/moai/buddhaa.obj");
+    Model moai("resources/objects/backpack/backpack.obj");
     moai.SetShaderTextureNamePrefix("material.");
 
 
@@ -253,8 +253,6 @@ int main() {
 
         //model se postavlja u pomocnoj funkciji
         advancedLightingShader.use();
-
-        advancedLightingShader.setInt("texture1", 0);
         advancedLightingShader.setMat4("projection", projection);
         advancedLightingShader.setMat4("view", view);
         advancedLightingShader.setVec3("viewPos", programState->camera.Position);
@@ -266,11 +264,11 @@ int main() {
 
         //Modeli
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(8, 0.5f + sin(currentFrame)*0.5, -3.0f));
+        model = glm::translate(model, glm::vec3(8, 1.5f + sin(currentFrame)*0.5, -3.0f));
 
        model = glm::rotate(model, glm::radians(50 * cos(currentFrame * 0.01f)*360), glm::vec3(0, 1, 0));
 
-        model = glm::scale(model, glm::vec3(3));
+        model = glm::scale(model, glm::vec3(0.5f));
         advancedLightingShader.setMat4("model", model);
         moai.Draw(advancedLightingShader);
 
