@@ -202,10 +202,12 @@ int main() {
 
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
-    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
-    unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/floor_specular.png").c_str());
-    unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
-    unsigned int diffuseMapGlass = loadTexture(FileSystem::getPath("resources/textures/glass3.png").c_str());
+    unsigned int floorDiffuseMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
+    unsigned int floorSpecularMap = loadTexture(FileSystem::getPath("resources/textures/floor_specular.png").c_str());
+    unsigned int wallDiffuseMap = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
+    unsigned int glassDiffuseMap = loadTexture(FileSystem::getPath("resources/textures/glass3.png").c_str());
+    unsigned int glassSpecularMap = loadTexture(FileSystem::getPath("resources/textures/glass_specular.png").c_str());
+
 
     stbi_set_flip_vertically_on_load(false);
     unsigned int cubemapTexture = loadCubemap(faces);
@@ -274,18 +276,18 @@ int main() {
 
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
-        SpawnCube(&advancedLightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f), &specularMap);
+        SpawnCube(&advancedLightingShader, &floorDiffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f), &floorSpecularMap);
 
         //Roof
-        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(0, 5.0f, 0), glm::vec3(20.0f, 0.25f, 10.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(0, 5.0f, 0), glm::vec3(20.0f, 0.25f, 10.0f));
 
 
         //Pillars
         ConfigureVAO(cubeVAO,cubeVBO, cubeVertices, sizeof(cubeVertices));
-        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
-        SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(-9.5f, 2.5f, -4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
+        SpawnCube(&advancedLightingShader, &wallDiffuseMap, &cubeVAO, glm::vec3(-9.5f, 2.5f, 4.5f), glm::vec3(1.0f, 5.0f, 1.0f));
 
 
 
@@ -317,7 +319,7 @@ int main() {
         //Crtaj pocevsi od najblizeg
         for(std::map<float, pair<glm::vec3,glm::vec3>>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
-            SpawnCube(&advancedLightingShader, &diffuseMapGlass, &cubeVAO, it->second.first, it->second.second, nullptr, 1.0f);
+            SpawnCube(&advancedLightingShader, &glassDiffuseMap, &cubeVAO, it->second.first, it->second.second, &glassSpecularMap, 0.75f);
         }
 
 
