@@ -21,15 +21,29 @@ void ConfigureVAO(unsigned int VAO, unsigned int cubeVBO, float vertices[], int 
     glEnableVertexAttribArray(2);
 }
 
-void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::vec3 scale) {
+void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::vec3 scale, uint *spec_map = nullptr, float shininess=0.3f) {
     shader->use();
+
 
     // bind diffuse map
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, *diff_map);
+    shader->setInt("material.diffuseMap", 0);
+
     // bind specular map
-    //glActiveTexture(GL_TEXTURE1);
-    //glBindTexture(GL_TEXTURE_2D, *diff_map);
+    if(spec_map != nullptr) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, *spec_map);
+        shader->setInt("material.specularMap", 1);
+    }
+    else {
+        shader->setInt("material.specularMap", 0);  //koristi difuznu ukoliko nema spekularnu
+    }
+
+    shader->setFloat("material.shininess", shininess);
+
+
+
 
     //Draw cube
     glBindVertexArray(*VAO);
@@ -39,8 +53,6 @@ void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::ve
     model = glm::translate(model, pos);
     //rotate
     model = glm::scale(model, scale);
-
-
 
 
     shader->setMat4("model", model);

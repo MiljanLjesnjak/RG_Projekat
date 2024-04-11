@@ -178,7 +178,7 @@ int main() {
 
     // load models
     // -----------
-    Model moai("resources/objects/moai/buddha.obj");
+    Model moai("resources/objects/moai/buddhaa.obj");
     moai.SetShaderTextureNamePrefix("material.");
 
 
@@ -203,7 +203,7 @@ int main() {
     // load textures (we now use a utility function to keep the code more organized)
     // -----------------------------------------------------------------------------
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
-    unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/floor.jpg").c_str());
+    unsigned int specularMap = loadTexture(FileSystem::getPath("resources/textures/floor_specular.png").c_str());
     unsigned int diffuseMapWall = loadTexture(FileSystem::getPath("resources/textures/marble.jpg").c_str());
     unsigned int diffuseMapGlass = loadTexture(FileSystem::getPath("resources/textures/glass3.png").c_str());
 
@@ -251,6 +251,7 @@ int main() {
 
         //model se postavlja u pomocnoj funkciji
         advancedLightingShader.use();
+
         advancedLightingShader.setInt("texture1", 0);
         advancedLightingShader.setMat4("projection", projection);
         advancedLightingShader.setMat4("view", view);
@@ -273,7 +274,7 @@ int main() {
 
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
-        SpawnCube(&advancedLightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f));
+        SpawnCube(&advancedLightingShader, &diffuseMap, &cubeVAO, glm::vec3(0), glm::vec3(20.0f, 0.25f, 10.0f), &specularMap);
 
         //Roof
         SpawnCube(&advancedLightingShader, &diffuseMapWall, &cubeVAO, glm::vec3(0, 5.0f, 0), glm::vec3(20.0f, 0.25f, 10.0f));
@@ -316,7 +317,7 @@ int main() {
         //Crtaj pocevsi od najblizeg
         for(std::map<float, pair<glm::vec3,glm::vec3>>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
-            SpawnCube(&advancedLightingShader, &diffuseMapGlass, &cubeVAO, it->second.first, it->second.second);
+            SpawnCube(&advancedLightingShader, &diffuseMapGlass, &cubeVAO, it->second.first, it->second.second, nullptr, 1.0f);
         }
 
 
