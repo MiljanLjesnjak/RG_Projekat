@@ -10,7 +10,6 @@ in VS_OUT {
 struct Material {
     sampler2D diffuseMap;
     sampler2D specularMap;
-    float shininess;
 };
 
 uniform Material material;
@@ -18,24 +17,47 @@ uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform bool blinn;
 
+//-----------------
+
+struct PointLight {
+    vec3 position;
+
+    float constant;
+    float linear;
+    float quadratic;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+uniform PointLight pointLight;
+
+vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
+
 void main()
 {
+    vec3 normal = normalize(fs_in.Normal);
+    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+
+    FragColor = CalcPointLight(pointLight, normal, fs_in.FragPos, viewDir);
+}
+
+vec4 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
+{
     vec4 diffuseColor = texture(material.diffuseMap, fs_in.TexCoords).rgba;
-    vec4 specularColor = vec4(texture(material.specularMap, fs_in.TexCoords).rrr, 1.0);
+    vec4 specularColor = vec4(texture(material.specularMap, fs_in.TexCoords).rrr, 0.5);
+
+    vec3 lightDir = normalize(light.position - fragPos);
 
     // ambient
-    vec4 ambient = vec4(0.05, 0.15, 0.05, 1.0) * diffuseColor;
-
+    vec4 ambient = vec4(light.ambient, 1.0) * diffuseColor;
 
     // diffuse
-    vec3 lightDir = normalize(lightPos - fs_in.FragPos);
-    vec3 normal = normalize(fs_in.Normal);
     float diff = max(dot(lightDir, normal), 0.0);
-    vec4 diffuse = diff * diffuseColor;
-
+    vec4 diffuse = vec4(light.diffuse, 1.0) * diff * diffuseColor;
 
     // specular
-    vec3 viewDir = normalize(viewPos - fs_in.FragPos);
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = 0.0;
     if(blinn)
@@ -48,8 +70,15 @@ void main()
         vec3 reflectDir = reflect(-lightDir, normal);
         spec = pow(max(dot(viewDir, reflectDir), 0.0), 8.0);
     }
-    vec4 specular = vec4(material.shininess) * spec * specularColor; // assuming bright white light color
+    vec4 specular = vec4(light.specular, 0.5f) * spec * specularColor; // assuming bright white light color
 
+    // attenuation
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
-    FragColor = ambient + diffuse + specular;
+    vec4 result = ambient + diffuse + specular;
+
+    result *= vec4(vec3(attenuation), 1.0);
+
+    return result;
 }

@@ -226,6 +226,17 @@ int main() {
             {glm::vec3(0, 2.5f, -4.75f), glm::vec3(18.0f, 5.0f, 0.5f)}
     };
 
+    advancedLightingShader.use();
+    advancedLightingShader.setVec3("pointLight.position", glm::vec3(0, 3, 0));
+    advancedLightingShader.setFloat("pointLight.constant", 1.0f);
+    advancedLightingShader.setFloat("pointLight.linear", 0.045f);
+    advancedLightingShader.setFloat("pointLight.quadratic", 0.0075f);
+    advancedLightingShader.setVec3("pointLight.ambient", glm::vec3(0.05f, 0.15f, 0.05f));
+    advancedLightingShader.setVec3("pointLight.diffuse", glm::vec3(0.8f));
+    advancedLightingShader.setVec3("pointLight.specular", glm::vec3(0.5f));
+
+
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -258,7 +269,7 @@ int main() {
         advancedLightingShader.setMat4("projection", projection);
         advancedLightingShader.setMat4("view", view);
         advancedLightingShader.setVec3("viewPos", programState->camera.Position);
-        advancedLightingShader.setVec3("lightPos", glm::vec3(0, 3, 0));
+        //advancedLightingShader.setVec3("lightPos", glm::vec3(0, 3, 0));
         advancedLightingShader.setInt("blinn", 1);
 
         //DRAW
@@ -321,7 +332,7 @@ int main() {
         //Crtaj pocevsi od najblizeg
         for(std::map<float, pair<glm::vec3,glm::vec3>>::reverse_iterator it = sorted.rbegin(); it != sorted.rend(); ++it)
         {
-            SpawnCube(&advancedLightingShader, &glassDiffuseMap, &cubeVAO, it->second.first, it->second.second, &glassSpecularMap, 0.75f);
+            SpawnCube(&advancedLightingShader, &glassDiffuseMap, &cubeVAO, it->second.first, it->second.second, &glassSpecularMap);
         }
 
 

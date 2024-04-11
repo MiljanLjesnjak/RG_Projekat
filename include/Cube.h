@@ -21,7 +21,7 @@ void ConfigureVAO(unsigned int VAO, unsigned int cubeVBO, float vertices[], int 
     glEnableVertexAttribArray(2);
 }
 
-void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::vec3 scale, uint *spec_map = nullptr, float shininess=0.3f) {
+void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::vec3 scale, uint *spec_map = nullptr) {
     shader->use();
 
 
@@ -39,11 +39,6 @@ void SpawnCube(Shader *shader, uint *diff_map, uint *VAO, glm::vec3 pos, glm::ve
     else {
         shader->setInt("material.specularMap", 0);  //koristi difuznu ukoliko nema spekularnu
     }
-
-    shader->setFloat("material.shininess", shininess);
-
-
-
 
     //Draw cube
     glBindVertexArray(*VAO);
