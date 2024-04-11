@@ -253,6 +253,8 @@ int main() {
 
         //model se postavlja u pomocnoj funkciji
         advancedLightingShader.use();
+        advancedLightingShader.setInt("material.diffuseMap", 0);
+        advancedLightingShader.setInt("material.specularMap", 1);
         advancedLightingShader.setMat4("projection", projection);
         advancedLightingShader.setMat4("view", view);
         advancedLightingShader.setVec3("viewPos", programState->camera.Position);
@@ -271,6 +273,8 @@ int main() {
         model = glm::scale(model, glm::vec3(0.5f));
         advancedLightingShader.setMat4("model", model);
         moai.Draw(advancedLightingShader);
+
+
 
         //Floor
         ConfigureVAO(cubeVAO,cubeVBO, cubeVerticesTiled, sizeof(cubeVerticesTiled));
@@ -319,8 +323,6 @@ int main() {
         {
             SpawnCube(&advancedLightingShader, &glassDiffuseMap, &cubeVAO, it->second.first, it->second.second, &glassSpecularMap, 0.75f);
         }
-
-
 
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
