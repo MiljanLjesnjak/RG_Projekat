@@ -1,11 +1,11 @@
-# project_base
-Prazan projekat sa pratećim bibliotekama koje koristimo na času. 
+# Implementirani efekti:
+#### Obavezne lekcije:
+1. Face culling
+2. [Blending i Advanced lighting](https://github.com/MiljanLjesnjak/RG_Projekat/blob/main/resources/shaders/advanced_lighting.fs)
+#### Opcione lekcije:
+1. Model
+2. Cubemaps (skybox)
 
-# Uputstvo
-1. `git clone https://github.com/matf-racunarska-grafika/project_base.git`
-2. CLion -> Open -> path/to/my/project_base
-3. Main se nalazi u src/main.cpp
-4. Cpp fajlovi idu u src folder
-5. Zaglavlja (h i hpp) fajlovi idu u include
-6. Šejderi idu u folder shaders. `Vertex shader` ima ekstenziju `.vs`, `fragment shader` ima ekstenziju `.fs`
-7. ALT+SHIFT+F10 -> project_base -> run
+# Komande:
+WASD - kretanje
+
