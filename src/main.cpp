@@ -288,7 +288,7 @@ int main() {
         advancedLightingShader.setFloat(spotLightIt + ".linear", 0.045f);
         advancedLightingShader.setFloat(spotLightIt + ".quadratic", 0.0075f);
         advancedLightingShader.setFloat(spotLightIt + ".cutOff", glm::cos(glm::radians(10.0f)));
-        advancedLightingShader.setFloat(spotLightIt + ".outerCutOff", glm::cos(glm::radians(15.0f)));
+        advancedLightingShader.setFloat(spotLightIt + ".outerCutOff", glm::cos(glm::radians(25.0f)));
     }
 
 
